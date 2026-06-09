@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kingsley Association • Tween L.E.A.D. Year 1 Budget Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        :root {
+            --sage: #2E6B5E;
+            --cream: #FDF8F3;
+            --warm: #C17F59;
+        }
+        
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        .section-header {
+            font-size: 1.1rem;
+            letter-spacing: -.025em;
+        }
+
+        .kpi-value {
+            font-variant-numeric: tabular-nums;
+            font-feature-settings: "ss02";
+        }
+
+        .budget-card {
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                       box-shadow 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        
+        .budget-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05);
+        }
+
+        .nav-tab {
+            position: relative;
+            padding-bottom: 0.75rem;
+            font-weight: 500;
+            color: #64748b;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-tab.active {
+            color: #2E6B5E;
+            font-weight: 600;
+        }
+        
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: #2E6B5E;
+            border-radius: 3px 3px 0 0;
+        }
+
+        .money {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .line-item-row {
+            transition: background-color 0.1s ease;
+        }
+        
+        .line-item-row:hover {
+            background-color: #f8fafc;
+        }
+
+        .modal {
+            animation: modalPopIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modalPopIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .category-pill {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.625rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            letter-spacing: -.02em;
+        }
+
+        .insight-card {
+            background: linear-gradient(145deg, #ffffff, #fdfaf5);
+        }
+
+        .data-table th {
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-change {
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .subtle-grid {
+            background-image: 
+                linear-gradient(#e2e8f0 1px, transparent 1px),
+                linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.4;
+        }
+
+        .print-only {
+            display: none;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                background: white !important;
+            }
+            .budget-card, .insight-card {
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+        }
+        
+        .chart-container {
+            position: relative;
+        }
+    </style>
+</head>
+<body class="bg-[#FDF8F3] text-slate-800">
+    <!-- Header -->
+    <header class="bg-white border-b border-[#EDE4D7] sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-x-4">
+                    <!-- Logo / Brand -->
+                    <div class="flex items-center gap-x-3">
+                        <div class="w-11 h-11 bg-[#2E6B5E] rounded-2xl flex items-center justify-center shadow-inner">
+                            <span class="text-white text-2xl font-bold tracking-tighter">K</span>
+                        </div>
+                        <div>
+                            <div class="font-display text-xl tracking-tighter font-semibold text-[#2E6B5E]">Kingsley Association</div>
+                            <div class="text-[10px] text-slate-500 -mt-1">East End • Pittsburgh</div>
+                        </div>
+                    </div>
+                    
+                    <div class="hidden md:block h-7 w-px bg-[#EDE4D7]"></div>
+                    
+                    <div>
+                        <div class="font-semibold text-xl tracking-tight">Tween L.E.A.D. Program</div>
+                        <div class="text-xs text-slate-500 font-medium">Year 1 Budget Dashboard • 60300 Program Expenses</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-x-3">
+                    <div class="hidden sm:flex items-center gap-x-2 bg-[#F1EDE5] text-[#5C5245] text-xs font-medium px-3.5 py-1.5 rounded-3xl">
+                        <i class="fa-solid fa-calendar-check mr-1.5"></i>
+                        <span>Updated June 2026</span>
+                    </div>
+                    
+                    <button onclick="printDashboard()" 
+                            class="no-print flex items-center gap-x-2 px-4 py-2 text-sm font-semibold bg-white border border-[#D4C9B8] hover:bg-[#F8F5F0] transition-colors rounded-2xl text-[#5C5245]">
+                        <i class="fa-solid fa-print mr-2"></i>
+                        <span class="hidden md:inline">Print Summary</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <div class="max-w-7xl mx-auto px-6 pt-6">
+        <div class="flex items-center gap-x-1 border-b border-[#EDE4D7] overflow-x-auto pb-1">
+            <button onclick="switchTab('dashboard')" id="tab-btn-dashboard"
+                    class="nav-tab active px-6 py-3 text-sm flex items-center gap-x-2 whitespace-nowrap">
+                <i class="fa-solid fa-chart-line w-4"></i>
+                <span class="font-semibold">At a Glance</span>
+            </button>
+            <button onclick="switchTab('categories')" id="tab-btn-categories"
+                    class="nav-tab px-6 py-3 text-sm flex items-center gap-x-2 whitespace-nowrap">
+                <i class="fa-solid fa-layer-group w-4"></i>
+                <span class="font-semibold">By Category</span>
+            </button>
+            <button onclick="switchTab('monthly')" id="tab-btn-monthly"
+                    class="nav-tab px-6 py-3 text-sm flex items-center gap-x-2 whitespace-nowrap">
+                <i class="fa-solid fa-calendar-alt w-4"></i>
+                <span class="font-semibold">Monthly View</span>
+            </button>
+            <button onclick="switchTab('details')" id="tab-btn-details"
+                    class="nav-tab px-6 py-3 text-sm flex items-center gap-x-2 whitespace-nowrap">
+                <i class="fa-solid fa-table w-4"></i>
+                <span class="font-semibold">Full Line Items</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6 pt-8 pb-16">
+        
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="tab-content">
+            <!-- Hero KPIs -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+                <!-- Primary: Year 1 KPI -->
+                <div class="bg-white rounded-3xl p-6 border border-[#EDE4D7] shadow-sm md:col-span-2">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <div class="flex items-center gap-x-2">
+                                <span class="category-pill bg-emerald-100 text-emerald-700">CURRENT YEAR • YEAR 1</span>
+                            </div>
+                            <div class="mt-3">
+                                <div class="text-6xl font-semibold tracking-tighter kpi-value text-emerald-700">$32,550</div>
+                                <div class="text-sm text-slate-500 mt-1 font-medium">Your approved spending authority this year</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <i class="fa-solid fa-wallet text-5xl text-emerald-600/20"></i>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-5 border-t border-[#F1EDE5] flex items-center justify-between text-xs">
+                        <div class="text-emerald-600 font-semibold flex items-center gap-x-1.5">
+                            <i class="fa-solid fa-check-circle"></i>
+                            <span>Focus: Year 1 • 19 line items</span>
+                        </div>
+                        <div class="text-emerald-600 font-medium">Use the cards below to explore every dollar</div>
+                    </div>
+                </div>
+
+                <!-- Secondary: Year 2 Snapshot -->
+                <div class="bg-white rounded-3xl p-6 border border-[#EDE4D7] shadow-sm">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <div class="flex items-center gap-x-2">
+                                <span class="category-pill bg-amber-100 text-amber-700">YEAR 2 SNAPSHOT</span>
+                            </div>
+                            <div class="mt-3">
+                                <div class="text-4xl font-semibold tracking-tighter kpi-value text-amber-600">$54,800</div>
+                                <div class="text-sm text-slate-500 mt-1 font-medium">Projected for full operations</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 pt-5 border-t border-[#F1EDE5]">
+                        <div class="flex items-center gap-x-1.5 text-xs">
+                            <span class="inline-flex items-center text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-px rounded-2xl">
+                                <i class="fa-solid fa-arrow-trend-up mr-1"></i> +68%
+                            </span>
+                            <span class="text-xs text-slate-500">growth from Y1</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400 mt-2 leading-snug">More field trips (4 vs 2) + full 12-month recurring costs. Shown for planning context.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-5 mb-8">
+                <!-- Allocation Donut -->
+                <div class="lg:col-span-2 bg-white rounded-3xl p-6 border border-[#EDE4D7] shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <div class="font-semibold section-header">Year 1 Allocation</div>
+                            <div class="text-xs text-slate-500">Where every dollar goes</div>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="height: 260px; max-height: 260px;">
+                        <canvas id="allocationChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Comparison Bar -->
+                <div class="lg:col-span-3 bg-white rounded-3xl p-6 border border-[#EDE4D7] shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <div class="font-semibold section-header">Year 1 vs Year 2 by Category</div>
+                            <div class="text-xs text-slate-500">Clear view of growth areas</div>
+                        </div>
+                        <div class="text-[10px] px-3 py-1 bg-[#F1EDE5] rounded-2xl text-[#5C5245] font-medium">All amounts in USD</div>
+                    </div>
+                    <div class="chart-container" style="height: 260px; max-height: 260px;">
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insights - Year 1 Focused -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="insight-card border border-[#EDE4D7] rounded-3xl p-5">
+                    <div class="flex gap-x-3">
+                        <div class="mt-0.5"><i class="fa-solid fa-tachometer-alt text-[#2E6B5E] text-xl"></i></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-semibold text-sm">Largest Category • Year 1</div>
+                            <div class="mt-1 text-lg font-semibold tracking-tight">Program Supplies &amp; Equipment</div>
+                            <div class="text-emerald-700 font-mono text-2xl font-semibold">$13,200 <span class="text-xs align-super font-normal text-emerald-600">41% of Y1</span></div>
+                            <div class="text-xs text-slate-500 mt-2">Printing/AV screens + devices + monthly supplies. This is where most of your authority sits right now.</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="insight-card border border-[#EDE4D7] rounded-3xl p-5">
+                    <div class="flex gap-x-3">
+                        <div class="mt-0.5"><i class="fa-solid fa-calendar text-amber-600 text-xl"></i></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-semibold text-sm">Year 1 Ramp-Up Items</div>
+                            <div class="mt-1 text-lg font-semibold tracking-tight">Travel + Many Supplies</div>
+                            <div class="text-amber-600 font-mono text-xl font-semibold">Start month 7</div>
+                            <div class="text-xs text-slate-500 mt-2">Uber, bus passes, mileage, and several $100/mo lines are only funded for the second half of Year 1. Plan accordingly.</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="insight-card border border-[#EDE4D7] rounded-3xl p-5">
+                    <div class="flex gap-x-3">
+                        <div class="mt-0.5"><i class="fa-solid fa-lightbulb text-[#C17F59] text-xl"></i></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-semibold text-sm">Year 1 Monthly Planning</div>
+                            <div class="mt-1 text-3xl font-semibold tracking-tighter text-[#C17F59]">$2,100–2,400</div>
+                            <div class="text-xs text-slate-500 mt-1 leading-snug">Estimated monthly burn in first half of Year 1 (lower recurring). Ramps up significantly after month 6. See Monthly View tab for details.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CATEGORIES TAB -->
+        <div id="tab-categories" class="tab-content hidden">
+            <div class="mb-6">
+                <div class="font-semibold text-xl tracking-tight">Explore Spending Authority by Category</div>
+                <p class="text-slate-600 text-sm mt-1">Tap any card to see the exact line items, original notes, and per-item authority. Perfect for monthly POs and vendor planning.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="category-cards">
+                <!-- Populated by JS -->
+            </div>
+            
+            <div class="mt-8 text-center">
+                <div class="inline-flex items-center gap-x-2 text-xs bg-white border border-[#EDE4D7] px-4 py-2 rounded-3xl text-slate-500">
+                    <i class="fa-solid fa-info-circle"></i>
+                    <span>All figures pulled directly from Teen Budgeting-1.csv • Phasing and per-trip costs preserved</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MONTHLY VIEW TAB -->
+        <div id="tab-monthly" class="tab-content hidden">
+            <div class="max-w-3xl">
+                <div class="mb-6">
+                    <div class="font-semibold text-xl tracking-tight">Year 1 Monthly Planning &amp; Ramp-Up</div>
+                    <p class="text-sm text-slate-600 mt-1">This view is built for Year 1 decision-making. Most recurring lines are funded at roughly half rate in the first half of the year. The second half (month 7 onward) brings the ramp for travel and several supply categories.</p>
+                </div>
+            </div>
+
+            <!-- Key Callouts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
+                <div class="bg-white border border-amber-200 rounded-3xl p-6">
+                    <div class="flex items-center gap-x-3 mb-4">
+                        <span class="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-2xl">YEAR 1 RAMP</span>
+                    </div>
+                    <div class="text-sm leading-relaxed text-slate-600">
+                        Many monthly items (Travel, Food, Supplies, Student Needs) appear budgeted for roughly 6 months of activity in Year 1. 
+                        <span class="font-semibold text-amber-700">Second-half ramp begins month 7</span> for Uber, bus passes, and mileage.
+                    </div>
+                    <div class="mt-4 text-xs bg-amber-50 border border-amber-100 p-3 rounded-2xl text-amber-700">
+                        <strong>Tip:</strong> Front-load planning for trips and supplies in months 7–12 to avoid mid-year shortfalls.
+                    </div>
+                </div>
+                
+                <div class="bg-white border border-emerald-200 rounded-3xl p-6">
+                    <div class="flex items-center gap-x-3 mb-4">
+                        <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-2xl">YEAR 2 FULL OPS</span>
+                    </div>
+                    <div class="text-sm leading-relaxed text-slate-600">
+                        Full-year recurring costs + doubled field trips (4 vs 2) and two End-of-Year celebrations. 
+                        Device and AV investments stay meaningful but stable.
+                    </div>
+                    <div class="mt-4 grid grid-cols-2 gap-3 text-xs">
+                        <div class="bg-emerald-50 border border-emerald-100 p-3 rounded-2xl">
+                            <div class="font-mono text-emerald-700 text-lg font-semibold">$3,300</div>
+                            <div class="text-emerald-600">recurring monthly base</div>
+                        </div>
+                        <div class="bg-emerald-50 border border-emerald-100 p-3 rounded-2xl">
+                            <div class="font-mono text-emerald-700 text-lg font-semibold">+$8,600</div>
+                            <div class="text-emerald-600">lumpy (trips + events + holiday)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recurring Breakdown -->
+            <div class="bg-white rounded-3xl border border-[#EDE4D7] p-6 mb-6">
+                <div class="font-semibold mb-4 flex items-center justify-between">
+                    <span>Full Operation Monthly Recurring (shown for Year 1 planning context)</span>
+                    <span class="font-mono text-2xl font-semibold text-[#2E6B5E]">$3,300</span>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div class="flex justify-between items-center py-2 border-b border-[#F1EDE5]">
+                        <span class="text-slate-600">Program Food</span>
+                        <span class="font-mono font-semibold">$1,000</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-[#F1EDE5]">
+                        <span class="text-slate-600">Student Basic Needs</span>
+                        <span class="font-mono font-semibold">$1,000</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-[#F1EDE5]">
+                        <span class="text-slate-600">Printing / AV / Screens</span>
+                        <span class="font-mono font-semibold">$600</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-[#F1EDE5]">
+                        <span class="text-slate-600">Program Supplies (4 lines)</span>
+                        <span class="font-mono font-semibold">$400</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-[#F1EDE5]">
+                        <span class="text-slate-600">Travel (Uber + Bus + Mileage)</span>
+                        <span class="font-mono font-semibold">$150</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-[#F1EDE5]">
+                        <span class="text-slate-600">Gift Card Incentives</span>
+                        <span class="font-mono font-semibold">$100</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-[#F1EDE5]">
+                        <span class="text-slate-600">Utensils / Prep</span>
+                        <span class="font-mono font-semibold">$50</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-[#F1EDE5] md:border-b-0">
+                        <span class="font-semibold">Total Recurring</span>
+                        <span class="font-mono font-bold text-[#2E6B5E]">$3,300</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lumpy Costs -->
+            <div>
+                <div class="font-semibold mb-3 text-sm uppercase tracking-wider text-slate-500">Lumpy / Event / Capital Costs (Add to Monthly Base)</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white border border-[#EDE4D7] rounded-2xl p-4">
+                        <div class="text-xs text-amber-600 font-bold">FIELD TRIPS (Y2)</div>
+                        <div class="font-mono text-2xl font-semibold mt-1">$2,100</div>
+                        <div class="text-xs mt-2 text-slate-500">4 trips × ($375 transport + $150 tickets)</div>
+                    </div>
+                    <div class="bg-white border border-[#EDE4D7] rounded-2xl p-4">
+                        <div class="text-xs text-amber-600 font-bold">END OF YEAR (Y2)</div>
+                        <div class="font-mono text-2xl font-semibold mt-1">$4,000</div>
+                        <div class="text-xs mt-2 text-slate-500">2 events × ($1,000 food + $1,000 gifts)</div>
+                    </div>
+                    <div class="bg-white border border-[#EDE4D7] rounded-2xl p-4">
+                        <div class="text-xs text-amber-600 font-bold">HOLIDAY GIFTS (Y2)</div>
+                        <div class="font-mono text-2xl font-semibold mt-1">$2,500</div>
+                        <div class="text-xs mt-2 text-slate-500">One-time annual distribution</div>
+                    </div>
+                    <div class="bg-white border border-[#EDE4D7] rounded-2xl p-4">
+                        <div class="text-xs text-amber-600 font-bold">DEVICES (Y2)</div>
+                        <div class="font-mono text-2xl font-semibold mt-1">$6,000</div>
+                        <div class="text-xs mt-2 text-slate-500">iPads + Chromebooks (phased investment)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FULL DETAILS TAB -->
+        <div id="tab-details" class="tab-content hidden">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-y-4 mb-5">
+                <div>
+                    <div class="font-semibold text-xl tracking-tight">Complete Line Item Register</div>
+                    <div class="text-sm text-slate-600">All 19 line items with original notes and phasing logic</div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Search items or notes..." 
+                               onkeyup="filterTable()"
+                               class="w-full md:w-72 bg-white border border-[#D4C9B8] focus:border-[#2E6B5E] transition-colors pl-10 pr-4 py-2.5 text-sm rounded-2xl placeholder:text-slate-400">
+                        <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-400"></i>
+                    </div>
+                    
+                    <select id="categoryFilter" onchange="filterTable()" 
+                            class="bg-white border border-[#D4C9B8] focus:border-[#2E6B5E] transition-colors px-4 py-2.5 text-sm rounded-2xl">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-white border border-[#EDE4D7] rounded-3xl overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full data-table">
+                        <thead class="bg-[#F8F5F0] border-b border-[#EDE4D7]">
+                            <tr>
+                                <th class="text-left px-6 py-4 font-semibold">Category</th>
+                                <th class="text-left px-6 py-4 font-semibold">Line Item</th>
+                                <th class="text-right px-6 py-4 font-semibold w-28">Year 1</th>
+                                <th class="text-right px-6 py-4 font-semibold w-28">Year 2</th>
+                                <th class="text-left px-6 py-4 font-semibold min-w-[280px]">Notes / Phasing</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="text-sm divide-y divide-[#F1EDE5]">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="px-6 py-4 bg-[#F8F5F0] border-t border-[#EDE4D7] flex items-center justify-between text-xs">
+                    <div id="tableSummary" class="font-medium text-slate-600"></div>
+                    <button onclick="copyTableAsCSV()" 
+                            class="flex items-center gap-x-2 px-4 py-1.5 bg-white border border-[#D4C9B8] hover:bg-white transition rounded-2xl text-xs font-semibold">
+                        <i class="fa-solid fa-copy"></i>
+                        <span>Copy visible as CSV</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Detail Modal -->
+    <div id="categoryModal" onclick="if (event.target.id === 'categoryModal') hideCategoryModal()" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" class="modal bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-[#EDE4D7] max-h-[85vh] overflow-hidden flex flex-col">
+            <!-- Modal Header -->
+            <div class="px-7 pt-6 pb-4 border-b flex items-start justify-between bg-[#FDF8F3]">
+                <div>
+                    <div id="modalCategoryName" class="font-display text-2xl tracking-tight"></div>
+                    <div id="modalCategoryMeta" class="text-sm text-slate-500 mt-0.5"></div>
+                </div>
+                <button onclick="hideCategoryModal()" class="text-slate-400 hover:text-slate-600 p-2 -mr-2">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-7 overflow-y-auto flex-1" style="max-height: 55vh;">
+                <!-- Year 1 Primary in Modal -->
+                <div class="grid grid-cols-2 gap-4 mb-5">
+                    <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4">
+                        <div class="text-xs uppercase tracking-wider text-emerald-600 font-semibold">Year 1 • Your Spending Authority</div>
+                        <div id="modalY1Total" class="font-mono text-4xl font-semibold text-emerald-700 mt-1"></div>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4">
+                        <div class="text-xs uppercase tracking-wider text-amber-600 font-semibold">Year 2 Projection</div>
+                        <div id="modalY2Total" class="font-mono text-3xl font-semibold text-amber-600 mt-1"></div>
+                    </div>
+                </div>
+                <div class="mb-5 -mt-1">
+                    <span id="modalPercent" class="inline-block text-xs font-bold bg-emerald-100 text-emerald-700 px-3 py-1 rounded-2xl"></span>
+                </div>
+                
+                <div class="text-xs uppercase tracking-[1px] font-semibold text-slate-500 mb-3">LINE ITEMS &amp; NOTES</div>
+                <div id="modalItemsList" class="space-y-3 text-sm">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="px-7 py-4 border-t bg-[#F8F5F0] flex items-center justify-between">
+                <button onclick="copyCategorySummary()" 
+                        class="flex items-center gap-x-2 text-sm font-semibold px-5 py-2.5 bg-white border border-[#D4C9B8] hover:bg-white active:bg-[#F1EDE5] transition rounded-2xl">
+                    <i class="fa-solid fa-copy mr-2"></i>
+                    <span>Copy category summary</span>
+                </button>
+                <button onclick="hideCategoryModal()" 
+                        class="text-sm font-semibold px-6 py-2.5 text-slate-600 hover:text-slate-800 transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="max-w-7xl mx-auto px-6 pb-8 text-center">
+        <div class="text-[10px] text-slate-400 flex items-center justify-center gap-x-2">
+            <span>Generated with beautiful-briefing for Kingsley Association operations • Year 1 focus</span>
+            <span class="hidden sm:inline">•</span>
+            <span class="hidden sm:inline">Data source: Teen Budgeting-1.csv</span>
+        </div>
+        <div class="mt-2 text-[9px] text-slate-400 max-w-md mx-auto">
+            Future version can become a live tracker: link to a Google Sheet or simple form where the director enters actual costs and corrections, and the dashboard updates automatically. Kept simple for now per request.
+        </div>
+    </footer>
+
+    <script>
+        // Tailwind script configuration
+        function initializeTailwind() {
+            document.documentElement.style.setProperty('--accent', '#2E6B5E');
+        }
+
+        // Budget data from Teen Budgeting-1.csv (cleaned for display, numbers exact)
+        const budgetData = [
+            { category: "Travel", item: "Uber", y1: 300, y2: 600, notes: "$50/month beginning second 6 months" },
+            { category: "Travel", item: "Bus passes", y1: 300, y2: 600, notes: "$50/month beginning second 6 months" },
+            { category: "Travel", item: "Staff Mileage", y1: 300, y2: 600, notes: "$50/month beginning second 6 months" },
+            
+            { category: "Field Trips", item: "Transportation", y1: 750, y2: 1500, notes: "$375/trip; 2 trips in Y1 and 4 trips in Y2" },
+            { category: "Field Trips", item: "Tickets", y1: 300, y2: 600, notes: "$150/trip; 2 trips in Y1 and 4 trips in Y2" },
+            
+            { category: "End of Year Celebration", item: "Food", y1: 1000, y2: 2000, notes: "$1000/event; 1 in Y1 and 2 in Y2" },
+            { category: "End of Year Celebration", item: "Gifts", y1: 1000, y2: 2000, notes: "$1000/event; 1 in Y1 and 2 in Y2" },
+            
+            { category: "Food & Prep", item: "Program Food", y1: 6000, y2: 12000, notes: "$1,000/month" },
+            { category: "Food & Prep", item: "Utensils / prep materials", y1: 300, y2: 600, notes: "$50/month" },
+            
+            { category: "Program Supplies & Equipment", item: "Program Supplies (decorations, notebooks, pens/pencils)", y1: 600, y2: 1200, notes: "$100/month" },
+            { category: "Program Supplies & Equipment", item: "Art Supplies", y1: 600, y2: 1200, notes: "$100/month" },
+            { category: "Program Supplies & Equipment", item: "Board Games", y1: 600, y2: 1200, notes: "$100/month" },
+            { category: "Program Supplies & Equipment", item: "Fitness Equipment", y1: 600, y2: 1200, notes: "$100/month" },
+            { category: "Program Supplies & Equipment", item: "iPads and Chromebooks", y1: 3000, y2: 6000, notes: "Device purchases (phased across years)" },
+            { category: "Program Supplies & Equipment", item: "Printing / Video boards / Interactive Screens", y1: 7200, y2: 7200, notes: "$600/month" },
+            { category: "Program Supplies & Equipment", item: "Staff Office Supplies", y1: 600, y2: 600, notes: "$50/month" },
+            
+            { category: "Student Basic Needs & Incentives", item: "Student basic needs (food, clothing, school supplies, hygiene products, haircuts)", y1: 6000, y2: 12000, notes: "$1,000/month" },
+            { category: "Student Basic Needs & Incentives", item: "Holiday Gift", y1: 2500, y2: 2500, notes: "$2,500/year" },
+            { category: "Student Basic Needs & Incentives", item: "Gift Card Incentives", y1: 600, y2: 1200, notes: "$100/month" }
+        ];
+
+        let categoryTotals = {};
+        let allocationChartInstance = null;
+        let comparisonChartInstance = null;
+        let currentModalCategory = null;
+
+        function calculateTotals() {
+            categoryTotals = {};
+            let grandY1 = 0;
+            let grandY2 = 0;
+
+            budgetData.forEach(row => {
+                if (!categoryTotals[row.category]) {
+                    categoryTotals[row.category] = { y1: 0, y2: 0, count: 0, items: [] };
+                }
+                categoryTotals[row.category].y1 += row.y1;
+                categoryTotals[row.category].y2 += row.y2;
+                categoryTotals[row.category].count += 1;
+                categoryTotals[row.category].items.push(row);
+                
+                grandY1 += row.y1;
+                grandY2 += row.y2;
+            });
+
+            // Store grand totals globally for easy access
+            window.grandTotals = { y1: grandY1, y2: grandY2 };
+            return categoryTotals;
+        }
+
+        function formatMoney(amount) {
+            return '$' + amount.toLocaleString('en-US');
+        }
+
+        function switchTab(tab) {
+            // Hide all
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            // Deactivate all buttons
+            document.querySelectorAll('[id^="tab-btn-"]').forEach(el => el.classList.remove('active'));
+            
+            // Show selected
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            document.getElementById('tab-btn-' + tab).classList.add('active');
+            
+            // Lazy init charts only when dashboard is shown
+            if (tab === 'dashboard' && (!allocationChartInstance || !comparisonChartInstance)) {
+                setTimeout(initCharts, 50);
+            }
+        }
+
+        function initCategoryCards() {
+            const container = document.getElementById('category-cards');
+            container.innerHTML = '';
+            
+            const order = ["Travel", "Field Trips", "End of Year Celebration", "Food & Prep", "Program Supplies & Equipment", "Student Basic Needs & Incentives"];
+            const icons = {
+                "Travel": "🚌",
+                "Field Trips": "🎟️",
+                "End of Year Celebration": "🎉",
+                "Food & Prep": "🍽️",
+                "Program Supplies & Equipment": "📦",
+                "Student Basic Needs & Incentives": "❤️"
+            };
+            
+            order.forEach(catName => {
+                const data = categoryTotals[catName];
+                if (!data) return;
+                
+                const pct = Math.round((data.y1 / window.grandTotals.y1) * 100);
+                const growth = data.y2 - data.y1;
+                const growthPct = data.y1 > 0 ? Math.round((growth / data.y1) * 100) : 0;
+                
+                const card = document.createElement('div');
+                card.className = `budget-card bg-white border border-[#EDE4D7] rounded-3xl p-5 cursor-pointer hover:border-[#2E6B5E]/40`;
+                card.innerHTML = `
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-x-3">
+                            <span class="text-3xl">${icons[catName] || '📊'}</span>
+                            <div>
+                                <div class="font-semibold text-lg leading-none tracking-tight">${catName}</div>
+                                <div class="text-xs text-slate-500 mt-1">${data.count} line items</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <div class="text-xs text-emerald-600 font-medium">YEAR 1 SPEND AUTHORITY</div>
+                            <div class="font-mono text-4xl font-semibold text-emerald-700 tracking-tighter">${formatMoney(data.y1)}</div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-xs pt-1">
+                            <div>
+                                <span class="text-amber-600 font-medium">Year 2 projection:</span> 
+                                <span class="font-mono font-semibold text-amber-600">${formatMoney(data.y2)}</span>
+                            </div>
+                            <div class="font-semibold ${growth > 0 ? 'text-emerald-600' : 'text-slate-400'} text-right">
+                                ${growth > 0 ? '+' : ''}${formatMoney(growth)} 
+                                <span class="font-normal text-[10px]">(${growthPct}%)</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="px-2.5 py-px rounded-xl bg-emerald-100 text-emerald-700 font-bold text-[10px]">${pct}% of total Y1 budget</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-5 pt-4 border-t border-[#F1EDE5] flex justify-end">
+                        <button onclick="event.stopImmediatePropagation(); showCategoryModal('${catName}');" 
+                                class="text-xs font-bold flex items-center gap-x-1.5 px-4 py-2 bg-[#2E6B5E] hover:bg-[#24574D] active:bg-black transition text-white rounded-2xl">
+                            VIEW LINE ITEMS <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+                        </button>
+                    </div>
+                `;
+                
+                card.onclick = () => showCategoryModal(catName);
+                container.appendChild(card);
+            });
+        }
+
+        function initCharts() {
+            // Destroy existing if re-init
+            if (allocationChartInstance) allocationChartInstance.destroy();
+            if (comparisonChartInstance) comparisonChartInstance.destroy();
+
+            const order = ["Travel", "Field Trips", "End of Year Celebration", "Food & Prep", "Program Supplies & Equipment", "Student Basic Needs & Incentives"];
+            
+            // Allocation Donut (Year 1)
+            const allocCtx = document.getElementById('allocationChart');
+            const allocData = order.map(cat => categoryTotals[cat] ? categoryTotals[cat].y1 : 0);
+            const allocLabels = order.map(c => c.replace(' & ', ' &amp; '));
+            
+            allocationChartInstance = new Chart(allocCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: order,
+                    datasets: [{
+                        data: allocData,
+                        backgroundColor: ['#2E6B5E', '#4A8B7A', '#6BA38F', '#C17F59', '#D4A574', '#E8C9A0'],
+                        borderColor: '#ffffff',
+                        borderWidth: 3,
+                        hoverOffset: 18
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '68%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            align: 'start',
+                            labels: {
+                                padding: 16,
+                                usePointStyle: true,
+                                font: { size: 11, weight: 500 },
+                                boxWidth: 8
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const val = ctx.raw;
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = Math.round((val / total) * 100);
+                                    return ` ${formatMoney(val)} (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Comparison Bar Chart
+            const compCtx = document.getElementById('comparisonChart');
+            const y1Data = order.map(cat => categoryTotals[cat] ? categoryTotals[cat].y1 : 0);
+            const y2Data = order.map(cat => categoryTotals[cat] ? categoryTotals[cat].y2 : 0);
+            
+            comparisonChartInstance = new Chart(compCtx, {
+                type: 'bar',
+                data: {
+                    labels: order.map(c => c.length > 18 ? c.substring(0, 16) + '…' : c),
+                    datasets: [
+                        {
+                            label: 'Year 1',
+                            data: y1Data,
+                            backgroundColor: '#2E6B5E',
+                            borderRadius: 4,
+                            barThickness: 14
+                        },
+                        {
+                            label: 'Year 2',
+                            data: y2Data,
+                            backgroundColor: '#C17F59',
+                            borderRadius: 4,
+                            barThickness: 14
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { color: '#f1e9df', tickLength: 4 },
+                            ticks: { font: { size: 10 }, color: '#64748b' }
+                        },
+                        y: {
+                            grid: { color: '#f1e9df' },
+                            ticks: { 
+                                font: { size: 10 }, 
+                                color: '#64748b',
+                                callback: (val) => '$' + (val / 1000) + 'k'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top', align: 'end', labels: { boxWidth: 10, padding: 12, font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => formatMoney(ctx.raw)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function populateCategoryFilter() {
+            const select = document.getElementById('categoryFilter');
+            const cats = Object.keys(categoryTotals);
+            cats.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderTable(filteredData = null) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            const dataToShow = filteredData || budgetData;
+            
+            dataToShow.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'line-item-row border-b border-[#F1EDE5] last:border-b-0';
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
+                        <span class="category-pill bg-[#E8F0ED] text-[#2E6B5E]">${row.category}</span>
+                    </td>
+                    <td class="px-6 py-4 font-medium pr-4">${row.item}</td>
+                    <td class="px-6 py-4 text-right font-mono font-semibold text-emerald-700">${formatMoney(row.y1)}</td>
+                    <td class="px-6 py-4 text-right font-mono font-semibold text-amber-600">${formatMoney(row.y2)}</td>
+                    <td class="px-6 py-4 text-xs text-slate-600 leading-snug">${row.notes}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            // Update summary
+            const totalY1 = dataToShow.reduce((sum, r) => sum + r.y1, 0);
+            const totalY2 = dataToShow.reduce((sum, r) => sum + r.y2, 0);
+            document.getElementById('tableSummary').innerHTML = 
+                `Showing <strong>${dataToShow.length}</strong> of 19 items &nbsp;•&nbsp; Filtered Y1: <strong>${formatMoney(totalY1)}</strong> &nbsp;•&nbsp; Y2: <strong>${formatMoney(totalY2)}</strong>`;
+        }
+
+        function filterTable() {
+            const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+            const catFilter = document.getElementById('categoryFilter').value;
+            
+            let filtered = budgetData;
+            
+            if (catFilter) {
+                filtered = filtered.filter(r => r.category === catFilter);
+            }
+            
+            if (searchVal.length > 1) {
+                filtered = filtered.filter(r => 
+                    r.item.toLowerCase().includes(searchVal) || 
+                    r.notes.toLowerCase().includes(searchVal) ||
+                    r.category.toLowerCase().includes(searchVal)
+                );
+            }
+            
+            renderTable(filtered);
+        }
+
+        function showCategoryModal(categoryName) {
+            const modal = document.getElementById('categoryModal');
+            const data = categoryTotals[categoryName];
+            if (!data) return;
+            
+            currentModalCategory = categoryName;
+            
+            // Header
+            document.getElementById('modalCategoryName').textContent = categoryName;
+            document.getElementById('modalCategoryMeta').innerHTML = `${data.count} line items • Original notes preserved`;
+            
+            // Totals
+            document.getElementById('modalY1Total').textContent = formatMoney(data.y1);
+            document.getElementById('modalY2Total').textContent = formatMoney(data.y2);
+            
+            const pct = Math.round((data.y1 / window.grandTotals.y1) * 100);
+            document.getElementById('modalPercent').innerHTML = `${pct}<span class="text-base align-super font-normal">%</span>`;
+            
+            // Items list
+            const listContainer = document.getElementById('modalItemsList');
+            listContainer.innerHTML = '';
+            
+            data.items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'bg-[#F8F5F0] border border-[#EDE4D7] rounded-2xl px-5 py-4';
+                div.innerHTML = `
+                    <div class="flex justify-between items-start gap-x-4">
+                        <div class="flex-1 min-w-0">
+                            <div class="font-semibold text-[15px]">${item.item}</div>
+                            <div class="text-xs text-slate-500 mt-1 leading-snug">${item.notes}</div>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <div class="font-mono text-sm font-semibold text-emerald-700">${formatMoney(item.y1)}</div>
+                            <div class="font-mono text-xs text-amber-600">${formatMoney(item.y2)}</div>
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(div);
+            });
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function hideCategoryModal() {
+            const modal = document.getElementById('categoryModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        function copyCategorySummary() {
+            if (!currentModalCategory || !categoryTotals[currentModalCategory]) return;
+            
+            const data = categoryTotals[currentModalCategory];
+            let text = `${currentModalCategory} — Tween L.E.A.D. Program Budget\n`;
+            text += `Year 1: ${formatMoney(data.y1)}   |   Year 2: ${formatMoney(data.y2)}\n`;
+            text += `Share of Year 1 total: ${Math.round((data.y1 / window.grandTotals.y1) * 100)}%\n\n`;
+            text += `Line Items:\n`;
+            
+            data.items.forEach(item => {
+                text += `• ${item.item}: Y1 ${formatMoney(item.y1)} | Y2 ${formatMoney(item.y2)}\n   Notes: ${item.notes}\n`;
+            });
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const origText = event.currentTarget ? event.currentTarget.innerHTML : '';
+                const btns = document.querySelectorAll('#categoryModal button');
+                if (btns.length > 0) {
+                    const orig = btns[0].innerHTML;
+                    btns[0].innerHTML = `<i class="fa-solid fa-check mr-2"></i>Copied!`;
+                    setTimeout(() => {
+                        if (btns[0]) btns[0].innerHTML = orig;
+                    }, 1800);
+                }
+            }).catch(() => {
+                alert('Copied to clipboard:\n\n' + text);
+            });
+        }
+
+        function copyTableAsCSV() {
+            const rows = document.querySelectorAll('#tableBody tr');
+            if (!rows.length) return;
+            
+            let csv = 'Category,Line Item,Year 1,Year 2,Notes\n';
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length < 5) return;
+                
+                const cat = cells[0].innerText.trim().replace(/"/g, '""');
+                const item = cells[1].innerText.trim().replace(/"/g, '""');
+                const y1 = cells[2].innerText.trim().replace('$','').replace(/,/g,'');
+                const y2 = cells[3].innerText.trim().replace('$','').replace(/,/g,'');
+                const notes = cells[4].innerText.trim().replace(/"/g, '""');
+                
+                csv += `"${cat}","${item}",${y1},${y2},"${notes}"\n`;
+            });
+            
+            navigator.clipboard.writeText(csv).then(() => {
+                const orig = event.target.innerHTML;
+                event.target.innerHTML = `<i class="fa-solid fa-check"></i> Copied!`;
+                setTimeout(() => {
+                    if (event.target) event.target.innerHTML = orig;
+                }, 1600);
+            }).catch(() => {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = csv;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('CSV copied to clipboard');
+            });
+        }
+
+        function printDashboard() {
+            window.print();
+        }
+
+        function initializeFilters() {
+            // Category filter options already populated in populateCategoryFilter()
+            // Search input listener is inline
+            // Bonus: allow pressing Escape to clear filters
+            document.getElementById('searchInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    this.value = '';
+                    filterTable();
+                }
+            });
+        }
+
+        function initializeEverything() {
+            initializeTailwind();
+            
+            // Calculate all aggregates first
+            calculateTotals();
+            
+            // Dashboard category cards
+            initCategoryCards();
+            
+            // Charts (will init when tab is visible, but we can pre-init)
+            // Actually init on first dashboard view for performance
+            setTimeout(() => {
+                const dash = document.getElementById('tab-dashboard');
+                if (!dash.classList.contains('hidden')) {
+                    initCharts();
+                }
+            }, 180);
+            
+            // Full details table
+            populateCategoryFilter();
+            renderTable();
+            initializeFilters();
+            
+            // Keyboard hint
+            console.log('%c[Teen Budget Dashboard] Interactive HTML ready. All data from Teen Budgeting-1.csv.', 'color:#94a3b8');
+            
+            // Optional: show a gentle welcome toast once (disabled for clean production)
+            // You can enable if desired for first-time directors
+        }
+
+        // Boot app
+        window.onload = function() {
+            initializeEverything();
+            
+            // Make sure dashboard is visible by default
+            document.getElementById('tab-dashboard').classList.remove('hidden');
+            document.getElementById('tab-btn-dashboard').classList.add('active');
+        };
+
+        // Expose a couple helpers for power users in console if needed
+        window.TeenBudget = {
+            refreshCharts: () => { if (allocationChartInstance) allocationChartInstance.update(); },
+            showCategory: (name) => showCategoryModal(name)
+        };
+    </script>
+</body>
+</html>
